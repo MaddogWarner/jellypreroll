@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # Keep GitHub Actions on supported (Node 24+) runtimes; grouped to reduce noise.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # .NET / NuGet dependencies (Jellyfin.Controller / Jellyfin.Model).
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
