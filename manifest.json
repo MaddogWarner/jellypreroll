@@ -1,12 +1,21 @@
 [
-    {
-        "guid": "eaabce77-c959-4d03-aed2-8fd17fad17d0",
-        "name": "PreRoll & Trailers",
-        "description": "Deterministic cinema-mode intro provider. Plays up to two trailers followed by a single preroll before the selected feature. Movies-only option, excludes the feature's own trailer, and never substitutes unrelated random video.",
-        "overview": "Play 1-2 trailers and a preroll before movies (cinema mode).",
-        "owner": "David",
-        "category": "General",
-        "imageUrl": "",
-        "versions": []
-    }
+  {
+    "guid": "eaabce77-c959-4d03-aed2-8fd17fad17d0",
+    "name": "PreRoll & Trailers",
+    "description": "Deterministic cinema-mode intro provider. Plays up to two trailers followed by a single preroll before the selected feature. Movies-only option, excludes the feature's own trailer, and never substitutes unrelated random video.",
+    "overview": "Play 1-2 trailers and a preroll before movies (cinema mode).",
+    "owner": "David",
+    "category": "General",
+    "imageUrl": "",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "See GitHub release notes.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/MaddogWarner/jellypreroll/releases/download/v1.0.0.0/preroll_1.0.0.0.zip",
+        "checksum": "f4d804f413e44390587ef736be4ed590",
+        "timestamp": "2026-07-03T05:07:35Z"
+      }
+    ]
+  }
 ]
