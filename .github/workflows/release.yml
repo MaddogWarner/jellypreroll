@@ -60,7 +60,7 @@ jobs:
       # Update the repo manifest on main as a separate, auditable step — the
       # build above came from the tag, this only mutates main's manifest.json.
       - name: Checkout main for manifest update
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           path: main-branch
