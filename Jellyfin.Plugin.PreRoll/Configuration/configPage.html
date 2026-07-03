@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>PreRoll &amp; Trailers</title>
+</head>
+<body>
+<div id="PreRollConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+     data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="PreRollConfigForm">
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">PreRoll &amp; Trailers</h2>
+                    <p class="fieldDescription">
+                        Plays up to two trailers followed by a single preroll before the selected feature.
+                        Requires "Cinema Mode" to be enabled in each user's Playback settings.
+                    </p>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label>
+                        <input is="emby-checkbox" type="checkbox" id="Enabled" />
+                        <span>Enable PreRoll &amp; Trailers</span>
+                    </label>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label>
+                        <input is="emby-checkbox" type="checkbox" id="MoviesOnly" />
+                        <span>Movies only (skip TV and everything else)</span>
+                    </label>
+                </div>
+
+                <div class="selectContainer">
+                    <label class="selectLabel" for="TrailerCount">Number of trailers</label>
+                    <select is="emby-select" id="TrailerCount" name="TrailerCount">
+                        <option value="0">0 (preroll only)</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label>
+                        <input is="emby-checkbox" type="checkbox" id="UseNestedTrailers" />
+                        <span>Use nested local trailers from other movies</span>
+                    </label>
+                </div>
+
+                <div class="selectContainer">
+                    <label class="selectLabel" for="TrailerLibraryId">Dedicated trailers library (optional)</label>
+                    <select is="emby-select" id="TrailerLibraryId" name="TrailerLibraryId"></select>
+                    <div class="fieldDescription">A Movies-type library containing trailer files. Leave as "None" to skip.</div>
+                </div>
+
+                <div class="selectContainer">
+                    <label class="selectLabel" for="PreRollLibraryId">Preroll library</label>
+                    <select is="emby-select" id="PreRollLibraryId" name="PreRollLibraryId"></select>
+                    <div class="fieldDescription">A Movies-type library containing preroll clips. Leave as "None" for no preroll.</div>
+                </div>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block">
+                        <span>Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = "eaabce77-c959-4d03-aed2-8fd17fad17d0";
+
+            function addOption(sel, value, text) {
+                var opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = text;
+                sel.appendChild(opt);
+            }
+
+            function populateLibraries(selects, virtualFolders, selectedValues) {
+                selects.forEach(function (sel, i) {
+                    // Build via DOM APIs (not innerHTML) so library names can't inject markup.
+                    sel.textContent = '';
+                    addOption(sel, '', 'None');
+                    virtualFolders.forEach(function (vf) {
+                        addOption(sel, vf.ItemId, vf.Name);
+                    });
+                    sel.value = selectedValues[i] || "";
+                });
+            }
+
+            document.querySelector('#PreRollConfigPage').addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                var page = this;
+                var configPromise = ApiClient.getPluginConfiguration(pluginId);
+                var foldersPromise = ApiClient.getVirtualFolders();
+
+                Promise.all([configPromise, foldersPromise]).then(function (responses) {
+                    var config = responses[0];
+                    var folders = responses[1];
+
+                    page.querySelector('#Enabled').checked = config.Enabled;
+                    page.querySelector('#MoviesOnly').checked = config.MoviesOnly;
+                    page.querySelector('#TrailerCount').value = config.TrailerCount;
+                    page.querySelector('#UseNestedTrailers').checked = config.UseNestedTrailers;
+
+                    populateLibraries(
+                        [page.querySelector('#TrailerLibraryId'), page.querySelector('#PreRollLibraryId')],
+                        folders,
+                        [config.TrailerLibraryId, config.PreRollLibraryId]);
+
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            document.querySelector('#PreRollConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                var page = document.querySelector('#PreRollConfigPage');
+
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    config.Enabled = page.querySelector('#Enabled').checked;
+                    config.MoviesOnly = page.querySelector('#MoviesOnly').checked;
+                    config.TrailerCount = parseInt(page.querySelector('#TrailerCount').value, 10);
+                    config.UseNestedTrailers = page.querySelector('#UseNestedTrailers').checked;
+                    config.TrailerLibraryId = page.querySelector('#TrailerLibraryId').value;
+                    config.PreRollLibraryId = page.querySelector('#PreRollLibraryId').value;
+
+                    ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                return false;
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

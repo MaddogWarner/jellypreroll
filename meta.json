@@ -1,0 +1,17 @@
+{
+    "guid": "eaabce77-c959-4d03-aed2-8fd17fad17d0",
+    "name": "PreRoll & Trailers",
+    "description": "Deterministic cinema-mode intro provider. Plays up to two trailers followed by a single preroll before the selected feature. Movies-only option, excludes the feature's own trailer, and never substitutes unrelated random video.",
+    "overview": "Play 1-2 trailers and a preroll before movies (cinema mode).",
+    "owner": "David",
+    "category": "General",
+    "version": "1.0.0.0",
+    "targetAbi": "10.11.0.0",
+    "framework": "net9.0",
+    "status": "Active",
+    "autoUpdate": false,
+    "changelog": "1.0.0.0 - Initial release.",
+    "assemblies": [
+        "Jellyfin.Plugin.PreRoll.dll"
+    ]
+}

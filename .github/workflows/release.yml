@@ -1,0 +1,97 @@
+name: Release
+
+# Tag a version to publish, e.g.:
+#   git tag v1.0.0.0 && git push origin v1.0.0.0
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+env:
+  TARGET_ABI: "10.11.0.0"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # Build from the exact commit the tag points at, so the release asset
+      # always matches what the tag represents (not whatever main is now).
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Derive version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          dotnet build -c Release \
+            -p:AssemblyVersion="${{ steps.ver.outputs.version }}" \
+            -p:FileVersion="${{ steps.ver.outputs.version }}" \
+            Jellyfin.Plugin.PreRoll/Jellyfin.Plugin.PreRoll.csproj
+
+      - name: Package
+        id: pkg
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.ver.outputs.version }}"
+          STAGE="stage"
+          mkdir -p "$STAGE"
+          cp Jellyfin.Plugin.PreRoll/bin/Release/net9.0/Jellyfin.Plugin.PreRoll.dll "$STAGE/"
+          # Keep meta.json version in sync with the tag.
+          jq --arg v "$VERSION" '.version=$v' meta.json > "$STAGE/meta.json"
+          ZIP="preroll_${VERSION}.zip"
+          (cd "$STAGE" && zip -r "../$ZIP" .)
+          CHKSUM=$(md5sum "$ZIP" | awk '{print $1}')
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "checksum=$CHKSUM" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.pkg.outputs.zip }}
+          generate_release_notes: true
+
+      # Update the repo manifest on main as a separate, auditable step — the
+      # build above came from the tag, this only mutates main's manifest.json.
+      - name: Checkout main for manifest update
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+
+      - name: Update and commit manifest.json
+        working-directory: main-branch
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.ver.outputs.version }}"
+          CHKSUM="${{ steps.pkg.outputs.checksum }}"
+          ZIP="${{ steps.pkg.outputs.zip }}"
+          SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${ZIP}"
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq \
+            --arg v "$VERSION" \
+            --arg c "$CHKSUM" \
+            --arg s "$SOURCE_URL" \
+            --arg t "$TIMESTAMP" \
+            --arg abi "$TARGET_ABI" \
+            '.[0].versions |= ([{
+                version: $v,
+                changelog: "See GitHub release notes.",
+                targetAbi: $abi,
+                sourceUrl: $s,
+                checksum: $c,
+                timestamp: $t
+              }] + (map(select(.version != $v))))' \
+            manifest.json > manifest.tmp
+          mv manifest.tmp manifest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "Update manifest for ${GITHUB_REF_NAME}" || echo "manifest unchanged"
+          git push origin HEAD:main
