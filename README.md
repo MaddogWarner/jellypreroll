@@ -46,8 +46,9 @@ Keep prerolls/trailers in their **own** libraries — do not mix them into your 
 ### Option A — plugin repository (recommended, supports updates)
 
 1. Push this project to a GitHub repo and cut a release (see [Releasing](#releasing)).
-2. In Jellyfin: **Dashboard → Plugins → Repositories → +** and add:
-   `https://raw.githubusercontent.com/<owner>/<repo>/main/manifest.json`
+2. In Jellyfin: **Dashboard → Plugins → Repositories → +** and add this **raw** URL
+   (note `raw.githubusercontent.com`, not `github.com` — the latter returns a 404):
+   `https://raw.githubusercontent.com/MaddogWarner/jellypreroll/main/manifest.json`
 3. **Catalog → General → PreRoll & Trailers → Install**, then restart Jellyfin.
 
 Future versions appear in the catalog automatically once you tag a new release.
