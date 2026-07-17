@@ -22,7 +22,7 @@ jobs:
       # always matches what the tag represents (not whatever main is now).
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 9.0.x
 
