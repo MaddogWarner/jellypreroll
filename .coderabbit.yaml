@@ -13,6 +13,6 @@ reviews:
     drafts: false
   tools:
     gitleaks:
-      enabled: false
+      enabled: true
     semgrep:
       enabled: false
